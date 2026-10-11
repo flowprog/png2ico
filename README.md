@@ -43,13 +43,7 @@ The programs have separate entry points: `png2ico.exe` opens the GUI and does no
 
 Currently Windows-only (Windows 10/11 recommended). Go 1.27.1 or later is required. Node.js, CGO, and WebView2 are not required.
 
-```powershell
-go mod download
-go run .
-go run ./cmd/png2ico-cli --help
-go test ./...
-go vet ./...
-```
+Before the first build, run `go generate .` to create the `appicon_windows_*.syso` resource files that embed the application icon. Building without them still succeeds, but the executables carry no icon. See [Application icon](#application-icon).
 
 Use the build script to generate a GUI executable that does not create a console window:
 
@@ -80,10 +74,11 @@ go build -trimpath -ldflags "-s -w" -o bin/png2ico-cli.exe ./cmd/png2ico-cli
 
 Both executables embed `assets/png2ico-icon.ico` through the `appicon_windows_*.syso` files in the main package and `cmd/png2ico-cli`. The GUI executable, window title bar, and taskbar all use this icon. No additional image files need to be placed beside the executables.
 
-After replacing the ICO, regenerate the resources before running the build commands above:
+The `.syso` files are build inputs produced by code generation: **run `go generate .` before building, or the executables will have no icon**. The build itself does not invoke generation automatically.
 
 ```powershell
 go generate .
+.\build.ps1
 ```
 
-Resource generation is pinned to `go-winres v0.3.3`; the first run downloads the tool's dependencies. The `.syso` files in the repository can be used directly with `go run .` and `go build`.
+Regeneration is required after replacing the ICO in `assets/` or deleting the `.syso` files. Resource generation is pinned to `go-winres v0.3.3`; the first run downloads the tool's dependencies. With the `.syso` files present, `go run .` and `go build` embed the icon automatically.
